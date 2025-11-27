@@ -1,0 +1,34 @@
+# Node.js dependencies
+node_modules/
+# three.js specific vendor folders if you use them locally outside node_modules
+# e.g., threejs_r123/
+
+# Build artifacts
+/dist
+/build
+/output
+
+# Environment variables
+.env
+.env.local
+
+# Log files
+*.log
+npm-debug.log*
+
+# Operating System and Editor files
+.DS_Store # macOS
+Thumbs.db # Windows
+.vscode/ # VS Code specific settings (optional, can be shared if useful for team)
+*.sublime-project
+*.sublime-workspace
+
+# Large assets that shouldn't be in Git
+# Consider using Git LFS for large 3D models or textures if they must be tracked
+# *.glb
+# *.gltf
+# *.bin
+# *.hdr
+
+# TypeScript files if you are using a transpiler (generated JS files)
+*.js.map

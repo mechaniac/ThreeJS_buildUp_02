@@ -1,0 +1,22 @@
+{
+  "name": "threejs-buildup-02",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "serve": "serve ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/three": "^0.181.0",
+    "serve": "^14.2.5",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "three": "^0.181.2"
+  }
+}
