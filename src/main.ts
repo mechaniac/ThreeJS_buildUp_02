@@ -6,57 +6,58 @@ import { createGround } from './objects/ground.js';
 import { createSphere } from './objects/sphere.js';
 import { addOrbitControls } from './controls/orbit.js';
 import { addTransformControls } from './controls/transform.js';
+import { createTransformPanel } from './ui/transformPanel.js';
 
-// canvas + renderer
+// --- DOM references
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
-const renderer = createRenderer(canvas);
 
-// scene + camera
+// --- renderer / scene / camera
+const renderer = createRenderer(canvas);
 const scene = createScene();
 const camera = createCamera();
 
-// initial size
-resizeRenderer();
+resizeRenderer(); // whatever you already had
 
-// lights
-const key = new THREE.DirectionalLight(0xffffff, 1.0);
-key.position.set(3, 5, 2);
-scene.add(key);
-
-const fill = new THREE.AmbientLight(0xffffff, 0.3);
-scene.add(fill);
-
-// objects
+// --- objects
 const ground = createGround();
 scene.add(ground);
 
-const sphere = createSphere(1);
+const sphere = createSphere();
 scene.add(sphere);
 
-// controls
+// --- controls
 const orbit = addOrbitControls(camera, renderer.domElement);
 const tControls = addTransformControls(camera, renderer.domElement, sphere);
-scene.add(tControls);
+scene.add(tControls as unknown as THREE.Object3D);
 
-// disable orbit while dragging
 tControls.addEventListener('dragging-changed', (event: any) => {
   orbit.enabled = !event.value;
 });
 
-// resize handling
-window.addEventListener('resize', () => {
-  resizeRenderer();
-});
+// --- UI panel
+const transformPanel = createTransformPanel(sphere);
+
+// --- resize to fit the viewport div
 
 function resizeRenderer() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  renderer.setSize(w, h);
+  const viewport = document.getElementById('viewport') as HTMLDivElement;
+  const w = viewport.clientWidth;
+  const h = viewport.clientHeight;
+
+  renderer.setSize(w, h, false);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
 }
 
-// main loop
+// update UI whenever the gizmo moves the sphere
+tControls.addEventListener('change', () => {
+  transformPanel.updateFromTarget();
+});
+
+// also initialise once
+transformPanel.updateFromTarget();
+
+// --- main loop
 function animate() {
   requestAnimationFrame(animate);
   orbit.update();
