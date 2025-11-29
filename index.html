@@ -25,24 +25,33 @@
       </div>
 
       <!-- right: UI panel -->
-      <aside id="ui">
-        <h1>Transform</h1>
+<aside id="ui">
+  <h1>Transform</h1>
 
-        <div class="field">
-          <label for="posX">Position X</label>
-          <input id="posX" type="number" step="0.01" />
-        </div>
+  <div id="gizmo-modes" class="mode-buttons">
+    <button data-mode="translate" class="active">Move</button>
+    <button data-mode="rotate">Rotate</button>
+    <button data-mode="scale">Scale</button>
+  </div>
 
-        <div class="field">
-          <label for="posY">Position Y</label>
-          <input id="posY" type="number" step="0.01" />
-        </div>
+  <hr />
 
-        <div class="field">
-          <label for="posZ">Position Z</label>
-          <input id="posZ" type="number" step="0.01" />
-        </div>
-      </aside>
+  <div class="field">
+    <label for="posX">Position X</label>
+    <input id="posX" type="number" step="0.01" />
+  </div>
+
+  <div class="field">
+    <label for="posY">Position Y</label>
+    <input id="posY" type="number" step="0.01" />
+  </div>
+
+  <div class="field">
+    <label for="posZ">Position Z</label>
+    <input id="posZ" type="number" step="0.01" />
+  </div>
+</aside>
+
     </div>
 
     <script type="module" src="./dist/main.js"></script>

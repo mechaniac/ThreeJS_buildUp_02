@@ -1,7 +1,6 @@
-// core/camera.js
 import * as THREE from 'three';
 
-export function createCamera() {
+export function createCamera(): THREE.PerspectiveCamera {
   const camera = new THREE.PerspectiveCamera(
     50,
     window.innerWidth / window.innerHeight,

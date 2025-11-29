@@ -7,6 +7,9 @@ import { createSphere } from './objects/sphere.js';
 import { addOrbitControls } from './controls/orbit.js';
 import { addTransformControls } from './controls/transform.js';
 import { createTransformPanel } from './ui/transformPanel.js';
+import { createGizmoModePanel } from './ui/gizmoModePanel.js';
+import type { GizmoMode } from './ui/gizmoModePanel.js';
+
 
 // --- DOM references
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
@@ -52,6 +55,28 @@ function resizeRenderer() {
 // update UI whenever the gizmo moves the sphere
 tControls.addEventListener('change', () => {
   transformPanel.updateFromTarget();
+});
+
+// --- UI: gizmo mode panel
+const gizmoModePanel = createGizmoModePanel((mode: GizmoMode) => {
+  tControls.setMode(mode);
+});
+
+// (optional) if you want: start in translate mode explicitly
+tControls.setMode('translate');
+
+window.addEventListener('keydown', (event) => {
+  switch (event.key) {
+    case '1':
+      tControls.setMode('translate');
+      break;
+    case '2':
+      tControls.setMode('rotate');
+      break;
+    case '3':
+      tControls.setMode('scale');
+      break;
+  }
 });
 
 // also initialise once
