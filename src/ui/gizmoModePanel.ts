@@ -3,7 +3,7 @@ export type GizmoMode = 'translate' | 'rotate' | 'scale';
 
 export interface GizmoModePanel {
   /** update the visual selection from outside if needed */
-  setMode(mode: GizmoMode): void;
+  setButtonMode(mode: GizmoMode): void;
   /** remove event listeners */
   dispose(): void;
 }
@@ -24,7 +24,7 @@ export function createGizmoModePanel(
     throw new Error('GizmoModePanel: no buttons with data-mode found');
   }
 
-  function setMode(mode: GizmoMode) {
+  function setButtonMode(mode: GizmoMode) {
     // update button highlighting
     for (const btn of buttons) {
       const btnMode = btn.dataset.mode as GizmoMode | undefined;
@@ -37,7 +37,7 @@ export function createGizmoModePanel(
     const mode = btn.dataset.mode as GizmoMode | undefined;
     if (!mode) return;
 
-    setMode(mode);
+    setButtonMode(mode);
     onModeChange(mode);
   }
 
@@ -47,10 +47,10 @@ export function createGizmoModePanel(
   }
 
   // default mode in UI
-  setMode('translate');
+  setButtonMode('translate');
 
   return {
-    setMode,
+    setButtonMode,
     dispose() {
       for (const btn of buttons) {
         btn.removeEventListener('click', handleClick);

@@ -6,7 +6,7 @@ export interface TransformPanel {
   dispose(): void;
 }
 
-export function createTransformPanel(target: THREE.Object3D): TransformPanel {
+export function createUIPanel(target: THREE.Object3D): TransformPanel {
   // Position
   const posX = document.getElementById('posX') as HTMLInputElement | null;
   const posY = document.getElementById('posY') as HTMLInputElement | null;

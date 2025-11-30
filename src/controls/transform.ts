@@ -2,7 +2,7 @@
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import type * as THREE from 'three';
 
-export function addTransformControls(
+export function addGizmo(
   camera: THREE.Camera,
   domElement: HTMLElement,
   object: THREE.Object3D
