@@ -9,6 +9,9 @@ import { addTransformControls } from './controls/transform.js';
 import { createTransformPanel } from './ui/transformPanel.js';
 import { createGizmoModePanel } from './ui/gizmoModePanel.js';
 import type { GizmoMode } from './ui/gizmoModePanel.js';
+import { createGizmoSpacePanel } from './ui/gizmoSpacePanel.js';
+import type { GizmoSpace } from './ui/gizmoSpacePanel.js';
+import { createResizeHandler } from './core/resize.js';
 
 
 // --- DOM references
@@ -18,6 +21,9 @@ const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const renderer = createRenderer(canvas);
 const scene = createScene();
 const camera = createCamera();
+
+// --- resize handling (keeps canvas in sync with #viewport)
+const disposeResize = createResizeHandler(renderer, camera, 'viewport');
 
 resizeRenderer(); // whatever you already had
 
@@ -62,18 +68,23 @@ const gizmoModePanel = createGizmoModePanel((mode: GizmoMode) => {
   tControls.setMode(mode);
 });
 
+const gizmoSpacePanel = createGizmoSpacePanel((space: GizmoSpace) => {
+  tControls.setSpace(space);
+});
+
 // (optional) if you want: start in translate mode explicitly
 tControls.setMode('translate');
+tControls.setSpace('local');
 
 window.addEventListener('keydown', (event) => {
   switch (event.key) {
-    case '1':
+    case 'w':
       tControls.setMode('translate');
       break;
-    case '2':
+    case 'e':
       tControls.setMode('rotate');
       break;
-    case '3':
+    case 'r':
       tControls.setMode('scale');
       break;
   }

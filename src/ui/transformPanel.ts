@@ -2,52 +2,98 @@
 import * as THREE from 'three';
 
 export interface TransformPanel {
-  /** Copy target.position into the UI fields */
   updateFromTarget(): void;
-  /** Clean up DOM listeners when you’re done */
   dispose(): void;
 }
 
 export function createTransformPanel(target: THREE.Object3D): TransformPanel {
+  // Position
   const posX = document.getElementById('posX') as HTMLInputElement | null;
   const posY = document.getElementById('posY') as HTMLInputElement | null;
   const posZ = document.getElementById('posZ') as HTMLInputElement | null;
 
-  if (!posX || !posY || !posZ) {
-    throw new Error('TransformPanel: position inputs not found in DOM');
+  // Rotation (degrees)
+  const rotX = document.getElementById('rotX') as HTMLInputElement | null;
+  const rotY = document.getElementById('rotY') as HTMLInputElement | null;
+  const rotZ = document.getElementById('rotZ') as HTMLInputElement | null;
+
+  // Scale
+  const sclX = document.getElementById('sclX') as HTMLInputElement | null;
+  const sclY = document.getElementById('sclY') as HTMLInputElement | null;
+  const sclZ = document.getElementById('sclZ') as HTMLInputElement | null;
+
+  // one-time null check so we fail fast if HTML is wrong
+  if (
+    !posX || !posY || !posZ ||
+    !rotX || !rotY || !rotZ ||
+    !sclX || !sclY || !sclZ
+  ) {
+    throw new Error('TransformPanel: one or more transform inputs not found in DOM');
   }
 
-  // --- object -> UI
+  const radToDeg = (r: number) => (r * 180) / Math.PI;
+  const degToRad = (d: number) => (d * Math.PI) / 180;
 
   function updateFromTarget() {
+    // Position
     posX!.value = target.position.x.toFixed(2);
     posY!.value = target.position.y.toFixed(2);
     posZ!.value = target.position.z.toFixed(2);
-  }
 
-  // --- (optional, later) UI -> object
+    // Rotation (radians → degrees)
+    const e = target.rotation;
+    rotX!.value = radToDeg(e.x).toFixed(1);
+    rotY!.value = radToDeg(e.y).toFixed(1);
+    rotZ!.value = radToDeg(e.z).toFixed(1);
+
+    // Scale
+    sclX!.value = target.scale.x.toFixed(2);
+    sclY!.value = target.scale.y.toFixed(2);
+    sclZ!.value = target.scale.z.toFixed(2);
+  }
 
   function onInputChange() {
-    const x = parseFloat(posX!.value);
-    const y = parseFloat(posY!.value);
-    const z = parseFloat(posZ!.value);
+    // Position
+    const px = parseFloat(posX!.value);
+    const py = parseFloat(posY!.value);
+    const pz = parseFloat(posZ!.value);
 
-    if (!Number.isNaN(x)) target.position.x = x;
-    if (!Number.isNaN(y)) target.position.y = y;
-    if (!Number.isNaN(z)) target.position.z = z;
+    if (!Number.isNaN(px)) target.position.x = px;
+    if (!Number.isNaN(py)) target.position.y = py;
+    if (!Number.isNaN(pz)) target.position.z = pz;
+
+    // Rotation (degrees → radians)
+    const rx = parseFloat(rotX!.value);
+    const ry = parseFloat(rotY!.value);
+    const rz = parseFloat(rotZ!.value);
+
+    const e = target.rotation;
+    if (!Number.isNaN(rx)) e.x = degToRad(rx);
+    if (!Number.isNaN(ry)) e.y = degToRad(ry);
+    if (!Number.isNaN(rz)) e.z = degToRad(rz);
+
+    // Scale
+    const sx = parseFloat(sclX!.value);
+    const sy = parseFloat(sclY!.value);
+    const sz = parseFloat(sclZ!.value);
+
+    if (!Number.isNaN(sx)) target.scale.x = sx;
+    if (!Number.isNaN(sy)) target.scale.y = sy;
+    if (!Number.isNaN(sz)) target.scale.z = sz;
   }
 
-  posX.addEventListener('change', onInputChange);
-  posY.addEventListener('change', onInputChange);
-  posZ.addEventListener('change', onInputChange);
+  const allInputs = [posX, posY, posZ, rotX, rotY, rotZ, sclX, sclY, sclZ];
 
-  // public API
+  for (const input of allInputs) {
+    input!.addEventListener('input', onInputChange);
+  }
+
   return {
     updateFromTarget,
     dispose() {
-      posX.removeEventListener('change', onInputChange);
-      posY.removeEventListener('change', onInputChange);
-      posZ.removeEventListener('change', onInputChange);
+      for (const input of allInputs) {
+        input!.removeEventListener('input', onInputChange);
+      }
     },
   };
 }
