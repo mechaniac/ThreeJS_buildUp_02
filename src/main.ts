@@ -1,107 +1,73 @@
+// src/main.ts
 import * as THREE from 'three';
 import { createRenderer } from './core/renderer.js';
 import { createScene } from './core/scene.js';
 import { createCamera } from './core/camera.js';
-import { createGround } from './objects/ground.js';
-import { createSphere } from './objects/sphere.js';
 import { addOrbitControls } from './controls/orbit.js';
 import { addGizmo } from './controls/transform.js';
-import { createUIPanel } from './ui/transformPanel.js';
-import { createGizmoModePanel } from './ui/gizmoModePanel.js';
-import type { GizmoMode } from './ui/gizmoModePanel.js';
-import { createGizmoSpacePanel } from './ui/gizmoSpacePanel.js';
-import type { GizmoSpace } from './ui/gizmoSpacePanel.js';
 import { createResizeHandler } from './core/resize.js';
+import {
+  createEditableClosedCurve,
+  type CurveSelectionMode,
+} from './geometry/curves/editableClosedCurve.js';
 
-
-// --- DOM references
+// --- DOM + core
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
-
-// --- renderer / scene / camera
 const renderer = createRenderer(canvas);
 const scene = createScene();
 const camera = createCamera();
 
-// --- resize handling (keeps canvas in sync with #viewport)
+// resize to fit #viewport
 const disposeResize = createResizeHandler(renderer, camera, 'viewport');
 
-// resizeRenderer(); // whatever you already had
+// lights
+const light = new THREE.DirectionalLight(0xffffff, 1.0);
+light.position.set(3, 5, 2);
+scene.add(light);
+scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
-// --- objects
-const ground = createGround();
-scene.add(ground);
-
-const sphere = createSphere();
-scene.add(sphere);
-
-// --- controls
+// camera controls
 const orbit = addOrbitControls(camera, renderer.domElement);
-const gizmo = addGizmo(camera, renderer.domElement, sphere);
+
+// transform gizmo
+const gizmo = addGizmo(camera, renderer.domElement, new THREE.Object3D());
 scene.add(gizmo as unknown as THREE.Object3D);
 
+// keep orbit fixed while dragging
 gizmo.addEventListener('dragging-changed', (event: any) => {
   orbit.enabled = !event.value;
 });
-// --- UI: gizmo mode panel
-const gizmoModePanel = createGizmoModePanel((mode: GizmoMode) => {
-  gizmo.setMode(mode);
-});
 
-const gizmoSpacePanel = createGizmoSpacePanel((space: GizmoSpace) => {
-  gizmo.setSpace(space);
-});
+// editable curve
+const editableCurve = createEditableClosedCurve(renderer, camera, gizmo, 8, 1.0);
+scene.add(editableCurve.group);
 
-// --- UI panel
-const uiPanel = createUIPanel(sphere);
-
-// --- resize to fit the viewport div
-
-// function resizeRenderer() {
-//   const viewport = document.getElementById('viewport') as HTMLDivElement;
-//   const w = viewport.clientWidth;
-//   const h = viewport.clientHeight;
-
-//   renderer.setSize(w, h, false);
-//   camera.aspect = w / h;
-//   camera.updateProjectionMatrix();
-// }
-
-// window.addEventListener("resize",resizeRenderer);
-
-// update UI whenever the gizmo moves the sphere
-gizmo.addEventListener('change', () => {
-  uiPanel.updateFromTarget();
-});
+// const editableCurve2 = createEditableClosedCurve(renderer, camera, gizmo, 8, 1.0);
+// scene.add(editableCurve2.group);
 
 
-
-// (optional) if you want: start in translate mode explicitly
-gizmoModePanel.setButtonMode('translate');
-gizmo.setMode('translate');
-gizmoSpacePanel.setSpace('local');
-gizmo.setSpace('local');
-
+// keyboard: 1 = curve mode, 2 = vertex mode
 window.addEventListener('keydown', (event) => {
   switch (event.key) {
-    case 'w':
-      gizmo.setMode('translate');
+    case '1':
+      editableCurve.setMode('curve');
+      // console.log('Selection mode: CURVE');
       break;
-    case 'e':
-      gizmo.setMode('rotate');
-      break;
-    case 'r':
-      gizmo.setMode('scale');
+    case '2':
+      editableCurve.setMode('vertex');
+      // console.log('Selection mode: VERTEX');
       break;
   }
 });
 
-// also initialise once
-uiPanel.updateFromTarget();
-
-// --- main loop
+// main loop
 function animate() {
   requestAnimationFrame(animate);
   orbit.update();
   renderer.render(scene, camera);
 }
 animate();
+
+// later, if you need teardown/hot reload, you can call:
+// editableCurve.dispose();
+// disposeResize();
