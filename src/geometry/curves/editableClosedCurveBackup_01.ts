@@ -8,12 +8,11 @@ export interface EditableClosedCurve {
   group: THREE.Group;                 // add this to the scene
   setMode(mode: CurveSelectionMode): void;
   getMode(): CurveSelectionMode;
-  /** Called by central pointer handler. Returns true if a handle was picked. */
-  onPointerDown(raycaster: THREE.Raycaster): boolean;
   dispose(): void;                    // remove listeners if needed
 }
 
 export function createEditableClosedCurve(
+  renderer: THREE.WebGLRenderer,
   camera: THREE.Camera,
   gizmo: TransformControls & THREE.Object3D,
   segments = 8,
@@ -25,7 +24,7 @@ export function createEditableClosedCurve(
   const controlMeshes: THREE.Mesh[] = [];
   const controlPoints: THREE.Vector3[] = [];
 
-  const handleGeom = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+  const handleGeom = new THREE.BoxGeometry(.05, .05, .05);
   const handleMat = new THREE.MeshStandardMaterial({ color: 0xffcc55 });
 
   for (let i = 0; i < segments; i++) {
@@ -67,7 +66,9 @@ export function createEditableClosedCurve(
   let activeHandle: THREE.Mesh | null = null;
 
   function setHandlesVisible(visible: boolean) {
-    for (const h of controlMeshes) h.visible = visible;
+    for (const h of controlMeshes) {
+      h.visible = visible;
+    }
   }
 
   // gizmo change: whenever something moves, refresh curve
@@ -76,27 +77,45 @@ export function createEditableClosedCurve(
   };
   gizmo.addEventListener('change', onGizmoChange);
 
-  // --- central pointer handler will call this
-  function onPointerDown(raycaster: THREE.Raycaster): boolean {
-    if (selectionMode !== 'vertex') return false;
+  // --- raycasting to pick handles in vertex mode
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+
+  function updatePointer(event: PointerEvent) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  }
+
+  const onPointerDown = (event: PointerEvent) => {
+    if (selectionMode !== 'vertex') return;
+
+    updatePointer(event);
+    raycaster.setFromCamera(pointer, camera);
 
     const hits = raycaster.intersectObjects(controlMeshes, false);
-    if (hits.length === 0) return false;
+    if (hits.length === 0) {
+      // clicked gizmo / empty space / other stuff -> keep current selection
+      return;
+    }
 
     const hitObject = hits[0]!.object as THREE.Mesh;
     activeHandle = hitObject;
     gizmo.attach(activeHandle);
-    return true;
-  }
+  };
+
+  renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
   function setMode(mode: CurveSelectionMode) {
     selectionMode = mode;
 
     if (mode === 'curve') {
+      // activeHandle = null;
       setHandlesVisible(false);
       gizmo.attach(group);     // move whole curve
     } else {
       setHandlesVisible(true);
+      // gizmo will attach to a handle on click
       if (activeHandle) {
         gizmo.attach(activeHandle);
       } else {
@@ -115,8 +134,8 @@ export function createEditableClosedCurve(
     getMode() {
       return selectionMode;
     },
-    onPointerDown,
     dispose() {
+      renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       gizmo.removeEventListener('change', onGizmoChange);
       curveLine.geometry.dispose();
       curveMaterial.dispose();

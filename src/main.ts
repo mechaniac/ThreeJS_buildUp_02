@@ -36,8 +36,26 @@ gizmo.addEventListener('dragging-changed', (event: any) => {
 });
 
 // editable curve
-const editableCurve = createEditableClosedCurve(renderer, camera, gizmo, 8, 1.0);
+const editableCurve = createEditableClosedCurve(camera, gizmo, 8, 1.0);
 scene.add(editableCurve.group);
+
+// --- central pointer handler
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+
+function updatePointer(event: PointerEvent) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+}
+
+renderer.domElement.addEventListener('pointerdown', (event) => {
+  updatePointer(event);
+  raycaster.setFromCamera(pointer, camera);
+
+  // For now only one curve:
+  editableCurve.onPointerDown(raycaster);
+});
 
 // keyboard: 1 = curve mode, 2 = vertex mode
 window.addEventListener('keydown', (event) => {
@@ -60,5 +78,3 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
-
-
