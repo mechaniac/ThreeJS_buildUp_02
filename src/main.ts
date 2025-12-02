@@ -1,4 +1,3 @@
-// src/main.ts
 import * as THREE from 'three';
 import { createRenderer } from './core/renderer.js';
 import { createScene } from './core/scene.js';
@@ -7,9 +6,9 @@ import { addOrbitControls } from './controls/orbit.js';
 import { addGizmo } from './controls/transform.js';
 import { createResizeHandler } from './core/resize.js';
 import {
-  createSelectableCurve,
-  type SelectableCurve,
-} from './geometry/curves/selectableCurve.js';
+  createEditableCurve,
+  type EditableCurve,
+} from './geometry/curves/editableCurve.js';
 
 // --- DOM + core
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
@@ -38,31 +37,32 @@ gizmo.addEventListener('dragging-changed', (event: any) => {
   orbit.enabled = !event.value;
 });
 
-// --- create several selectable curves
-const curves: SelectableCurve[] = [];
+// --- create several editable curves
+const curves: EditableCurve[] = [];
 
 // curve 0
-const curveA = createSelectableCurve(8, 1.0, 0x00ffcc);
+const curveA = createEditableCurve(camera, gizmo, 8, 1.0, 0x00ffcc);
 curveA.group.position.set(-1.5, 0, 0);
 scene.add(curveA.group);
 curves.push(curveA);
 
 // curve 1
-const curveB = createSelectableCurve(8, 0.6, 0xff6699);
+const curveB = createEditableCurve(camera, gizmo, 8, 0.6, 0xff6699);
 curveB.group.position.set(1.5, 0, 0);
 scene.add(curveB.group);
 curves.push(curveB);
 
 // active curve: start with A
-let activeCurve: SelectableCurve | null = curveA;
+let activeCurve: EditableCurve | null = curveA;
+activeCurve.setMode('curve');
 gizmo.attach(curveA.group);
 
-// --- central pointer handler (curve selection only)
+// --- central pointer handler
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
-// make line picking a bit easier
+// make line picking easier
 raycaster.params.Line.threshold = 0.1;
 
 function updatePointer(event: PointerEvent) {
@@ -75,18 +75,31 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
   updatePointer(event);
   raycaster.setFromCamera(pointer, camera);
 
-  // raycast against all curve groups (lines are children)
+  // -----------------------------------------
+  // 1) VERTEX PICK (only on active curve, only in vertex mode)
+  // -----------------------------------------
+  if (activeCurve && activeCurve.getMode() === 'vertex') {
+    const hitVertex = activeCurve.tryPickVertex(raycaster);
+    // IMPORTANT:
+    // In vertex mode we *do not* fall through to curve selection.
+    // That way clicking on gizmo axes doesn't reattach to the group.
+    if (hitVertex) return;
+    return;
+  }
+
+  // -----------------------------------------
+  // 2) CURVE PICK (same as before, works in curve mode)
+  // -----------------------------------------
   const groups = curves.map((c) => c.group);
   const hits = raycaster.intersectObjects(groups, true);
 
   if (hits.length === 0) {
-    // clicked empty space: keep current activeCurve
+    // clicked empty space → keep current activeCurve
     return;
   }
 
   const hitObj = hits[0].object;
 
-  // find which curve's group is an ancestor of the hit object
   const hitCurve = curves.find((curve) => {
     let obj: THREE.Object3D | null = hitObj;
     while (obj) {
@@ -98,11 +111,44 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
 
   if (!hitCurve) return;
 
-  // switch active curve and attach gizmo to it
   activeCurve = hitCurve;
-  gizmo.attach(activeCurve.group);
+  // attach gizmo according to current mode of activeCurve
+  if (activeCurve.getMode() === 'curve') {
+    gizmo.attach(activeCurve.group);
+  } else {
+    // vertex mode with no vertex picked yet -> gizmo on group
+    gizmo.attach(activeCurve.group);
+  }
 
   console.log('Selected curve:', activeCurve.group.uuid);
+});
+
+// --- gizmo change: update active curve's shape
+gizmo.addEventListener('change', () => {
+  if (activeCurve) {
+    activeCurve.onGizmoChanged();
+  }
+});
+
+// --- keyboard: change mode on active curve
+window.addEventListener('keydown', (event) => {
+  if (!activeCurve) return;
+
+  switch (event.key) {
+    case '1': {
+      activeCurve.setMode('curve');
+      gizmo.attach(activeCurve.group);
+      console.log('Mode curve on', activeCurve.group.uuid);
+      break;
+    }
+    case '2': {
+      activeCurve.setMode('vertex');
+      // gizmo will move to a vertex when we click one
+      gizmo.attach(activeCurve.group);
+      console.log('Mode vertex on', activeCurve.group.uuid);
+      break;
+    }
+  }
 });
 
 // --- main loop
