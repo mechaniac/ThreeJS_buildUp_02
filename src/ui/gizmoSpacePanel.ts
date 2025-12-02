@@ -43,7 +43,7 @@ export function createGizmoSpacePanel(
   }
 
   // default
-  setSpace('local');
+  setSpace('world');
 
   return {
     setSpace,
