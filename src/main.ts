@@ -6,10 +6,7 @@ import { createCamera } from './core/camera.js';
 import { addOrbitControls } from './controls/orbit.js';
 import { addGizmo } from './controls/transform.js';
 import { createResizeHandler } from './core/resize.js';
-import {
-  createEditableClosedCurve,
-  type CurveSelectionMode,
-} from './geometry/curves/editableClosedCurve.js';
+import { createEditableClosedCurve } from './geometry/curves/editableClosedCurve.js';
 
 // --- DOM + core
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
@@ -18,7 +15,7 @@ const scene = createScene();
 const camera = createCamera();
 
 // resize to fit #viewport
-const disposeResize = createResizeHandler(renderer, camera, 'viewport');
+createResizeHandler(renderer, camera, 'viewport');
 
 // lights
 const light = new THREE.DirectionalLight(0xffffff, 1.0);
@@ -41,23 +38,17 @@ gizmo.addEventListener('dragging-changed', (event: any) => {
 // editable curve
 const editableCurve = createEditableClosedCurve(renderer, camera, gizmo, 8, 1.0);
 scene.add(editableCurve.group);
-for (const child of editableCurve.group.children) {
-  console.log(child); // Logs the entire THREE.Mesh object instance
-  console.log('Object Type:', child.type); // e.g., 'Mesh'
-  console.log('Object UUID:', child.uuid); // A unique identifier
-  console.log('Object Position:', child.position.toArray()); // Position data
-}
 
 // keyboard: 1 = curve mode, 2 = vertex mode
 window.addEventListener('keydown', (event) => {
   switch (event.key) {
     case '1':
       editableCurve.setMode('curve');
-      console.log('Selection mode: CURVE');
+      console.log(`Selection mode: ${editableCurve.getMode()}`);
       break;
     case '2':
       editableCurve.setMode('vertex');
-      console.log('Selection mode: VERTEX');
+      console.log(`Selection mode: ${editableCurve.getMode()}`);
       break;
   }
 });
@@ -70,6 +61,4 @@ function animate() {
 }
 animate();
 
-// later, if you need teardown/hot reload, you can call:
-// editableCurve.dispose();
-// disposeResize();
+

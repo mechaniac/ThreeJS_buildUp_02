@@ -110,7 +110,7 @@ export function createEditableClosedCurve(
     selectionMode = mode;
 
     if (mode === 'curve') {
-      activeHandle = null;
+      // activeHandle = null;
       setHandlesVisible(false);
       gizmo.attach(group);     // move whole curve
     } else {
