@@ -1,3 +1,5 @@
+//main.ts
+
 import * as THREE from 'three';
 import { createRenderer } from './core/renderer.js';
 import { createScene } from './core/scene.js';
@@ -41,10 +43,11 @@ gizmo.addEventListener('dragging-changed', (event: any) => {
 const curves: EditableCurve[] = [];
 
 // curve 0
-const curveA = createEditableCurve(camera, gizmo, 8, 1.0, 0x00ffcc);
+const curveA = createEditableCurve(camera, gizmo, 8, 1.0, 0x00ffcc, "curveA");
 curveA.group.position.set(-1.5, 0, 0);
 scene.add(curveA.group);
 curves.push(curveA);
+// curveA.logCurve();
 
 // curve 1
 const curveB = createEditableCurve(camera, gizmo, 8, 0.6, 0xff6699);
@@ -84,14 +87,14 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
     // In vertex mode we *do not* fall through to curve selection.
     // That way clicking on gizmo axes doesn't reattach to the group.
     if (hitVertex) return;
-    return;
+    return;//because we are in vertex mode, we ALWAYS return (might be redundant)
   }
 
   // -----------------------------------------
   // 2) CURVE PICK (same as before, works in curve mode)
   // -----------------------------------------
-  const groups = curves.map((c) => c.group);
-  const hits = raycaster.intersectObjects(groups, true);
+  const lines = curves.map((c) => c.line);
+  const hits = raycaster.intersectObjects(lines, true);
 
   if (hits.length === 0) {
     // clicked empty space → keep current activeCurve
