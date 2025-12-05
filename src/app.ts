@@ -1,51 +1,35 @@
-// src/App.ts
 import * as THREE from "three";
 import { SceneController } from "./SceneController.js";
+import { CubeEntity } from "./CubeEntity.js";
 
 export class App {
-    private sceneController: SceneController;
-    private cube: THREE.Mesh;
+  private sceneController: SceneController;
+  private cubeEntity: CubeEntity;
 
-    constructor(private container: HTMLElement) {
-        this.sceneController = new SceneController(container);
+  constructor(private container: HTMLElement) {
+    this.sceneController = new SceneController(container);
 
-        // demo content: a cube + axes
-        const geom = new THREE.BoxGeometry(1, 1, 1);
-        const mat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        this.cube = new THREE.Mesh(geom, mat);
-        this.sceneController.add(this.cube);
+    this.cubeEntity = new CubeEntity(1, 0xff0000);
+    this.sceneController.addEntity(this.cubeEntity);
 
-        const axes = new THREE.AxesHelper(2);
-        this.sceneController.add(axes);
-        
-        // per-frame rotation
-        this.sceneController.addUpdateCallback((dt) => {
-            this.spinCube(dt); // radians per second
-        });
+    const axes = new THREE.AxesHelper(2);
+    this.sceneController.add(axes);
 
-        // events
-        window.addEventListener("resize", this.onResize);
+    window.addEventListener("resize", this.onResize);
+    this.sceneController.start();
+  }
 
-        // start render loop
-        this.sceneController.start();
-    }
+  private onResize = () => {
+    this.sceneController.resize();
+  };
 
-    do(s: string){
-        return"s:" + s;
-    }
+  dispose() {
+    window.removeEventListener("resize", this.onResize);
+    this.sceneController.dispose();
+  }
 
-    private onResize = () => {
-        this.sceneController.resize();
-    };
-
-    /** later you can call this when switching pages */
-    dispose() {
-        window.removeEventListener("resize", this.onResize);
-        this.sceneController.dispose();
-    }
-
-    /** example hook to animate the cube from outside if you want */
-    spinCube(speed = 1) {
-        this.cube.rotation.y += speed;
-    }
+  // console / UI control
+  spinCube(speed = 1) {
+    this.cubeEntity.setSpeed(speed);
+  }
 }
