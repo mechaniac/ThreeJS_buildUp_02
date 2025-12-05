@@ -1,9 +1,11 @@
-import { BasicScene } from "./classes/basicScene.js";
+// src/main.ts
+import { App } from "./app.js";
+
 console.log("main.ts starting");
 
 const container = document.getElementById("viewport")!;
-console.log(container);
-const sceneApp = new BasicScene(container);
-console.log("BasicScene created");
+const app = new App(container);
 
-window.addEventListener("resize", () => sceneApp.resize());
+// for debugging in console:
+// @ts-ignore
+(window as any).app = app;
