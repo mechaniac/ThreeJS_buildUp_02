@@ -43,7 +43,7 @@ export class SceneController {
     this.controls.dampingFactor = 0.1;
     this.controls.target.set(0, 0, 0);
 
-    this.rigInteraction = new RigInteractionController(this.camera, this.scene, this.renderer.domElement,this.chain.joints)
+    this.rigInteraction = new RigInteractionController(this.camera, this.scene, this.renderer.domElement,this.chain.joints, this.controls)
   }
 
   start() {

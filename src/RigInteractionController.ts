@@ -2,12 +2,14 @@
 import * as THREE from "three";
 import { TransformControls } from "three/addons/controls/TransformControls.js";
 import { Joint } from "./Joint.js";
+import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 
 export class RigInteractionController {
     private raycaster = new THREE.Raycaster();
     private pointer = new THREE.Vector2();
     private transformControls: TransformControls;
+    private helper: THREE.Object3D;
 
     private pickableMeshes: THREE.Object3D[] = [];
     private selectedJoint: Joint | null = null;
@@ -16,38 +18,33 @@ export class RigInteractionController {
         private camera: THREE.Camera,
         private scene: THREE.Scene,
         private domElement: HTMLElement,
-        joints: Joint[]
+        joints: Joint[],
+        private orbit: OrbitControls
     ) {
         this.transformControls = new TransformControls(camera, domElement);
-
-        // debug
-        console.log(
-            "TransformControls.prototype instanceof Object3D:",
-            TransformControls.prototype instanceof THREE.Object3D
-        );
-        console.log(
-            "instance instanceof Object3D:",
-            this.transformControls instanceof THREE.Object3D
-        );
-        this.transformControls.setMode('rotate');
+        this.transformControls.setMode('translate');
         this.transformControls.size = 0.5;
-        const gizmo = (this.transformControls as any)._gizmo;
-        if (gizmo) {
-            this.scene.add(gizmo);
-        } else {
-            console.warn("TransformControls has no _gizmo field – check three version");
-        }
+
+        // NEW: get the helper Object3D and add that to the scene
+        this.helper = this.transformControls.getHelper();
+        this.scene.add(this.helper);
 
         // collect meshes to raycast against
         this.pickableMeshes = joints.map(j => j.sphere);
 
         domElement.addEventListener('pointerdown', this.onPointerDown);
+
+
+        this.transformControls.addEventListener("dragging-changed", (e: any) => {
+            // you can wire this to OrbitControls.enabled if you want
+            orbit.enabled = !e.value;
+        });
     }
 
     dispose() {
         this.domElement.removeEventListener('pointerdown', this.onPointerDown);
-        const gizmo = (this.transformControls as any)._gizmo;
-        this.scene.remove(gizmo);
+        this.scene.remove(this.helper);
+        this.transformControls.dispose();
     }
 
     private onPointerDown = (event: PointerEvent) => {
@@ -59,7 +56,7 @@ export class RigInteractionController {
 
         const hits = this.raycaster.intersectObjects(this.pickableMeshes, false);
         if (hits.length === 0) {
-            this.setSelectedJoint(null);
+            // this.setSelectedJoint(null);
             return;
         }
 
