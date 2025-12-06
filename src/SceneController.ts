@@ -1,27 +1,28 @@
-// src/SceneController.ts
+// SceneController.ts
 import * as THREE from "three";
-import { Entity } from "./Entity.js";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { JointChain } from './JointChain';
-import { RigInteractionController } from './RigInteractionController';
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { JointChain } from "./JointChain.js";
+import { RigInteractionController } from "./RigInteractionController.js";
+
 
 export class SceneController {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
   private controls: OrbitControls;
+  private chain : JointChain;
+  private rigInteraction: RigInteractionController;
 
   private animationId: number | null = null;
-  private lastTime = 0;
-
-  private entities: Entity[] = [];
 
   constructor(private container: HTMLElement) {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x333333);
 
-    // const chain = JointChain.createLinear(5, 0.25);
-    // this.scene.add(chain.root);
+    this.chain = JointChain.createLinear(5, 0.25);
+    this.scene.add(this.chain.root);
+
+    
 
     this.camera = new THREE.PerspectiveCamera(
       60,
@@ -41,10 +42,11 @@ export class SceneController {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.1;
     this.controls.target.set(0, 0, 0);
+
+    this.rigInteraction = new RigInteractionController(this.camera, this.scene, this.renderer.domElement,this.chain.joints)
   }
 
   start() {
-    this.lastTime = performance.now();
     this.animationId = requestAnimationFrame(this.animate);
   }
 
@@ -55,16 +57,6 @@ export class SceneController {
     }
     this.renderer.dispose();
     this.controls.dispose();
-  }
-
-  addEntity(e: Entity) {
-    this.entities.push(e);
-    this.scene.add(e.object3D);
-  }
-
-  removeEntity(e: Entity) {
-    this.entities = this.entities.filter(x => x !== e);
-    this.scene.remove(e.object3D);
   }
 
   add(obj: THREE.Object3D) {
@@ -93,12 +85,6 @@ export class SceneController {
   }
 
   private animate = (time: number) => {
-    const dt = (time - this.lastTime) / 1000;
-    this.lastTime = time;
-
-    for (const e of this.entities) {
-      e.update?.(dt);
-    }
 
     this.controls.update();
     this.renderer.render(this.scene, this.camera);

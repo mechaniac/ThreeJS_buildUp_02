@@ -1,5 +1,5 @@
 // JointChain.ts
-import { Joint } from './Joint';
+import { Joint } from './Joint.js';
 
 export class JointChain {
   public readonly joints: Joint[];
