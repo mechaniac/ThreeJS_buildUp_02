@@ -1,11 +1,15 @@
 // src/SceneController.ts
 import * as THREE from "three";
 import { Entity } from "./Entity.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { JointChain } from './JointChain';
+import { RigInteractionController } from './RigInteractionController';
 
 export class SceneController {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
+  private controls: OrbitControls;
 
   private animationId: number | null = null;
   private lastTime = 0;
@@ -15,6 +19,9 @@ export class SceneController {
   constructor(private container: HTMLElement) {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x333333);
+
+    // const chain = JointChain.createLinear(5, 0.25);
+    // this.scene.add(chain.root);
 
     this.camera = new THREE.PerspectiveCamera(
       60,
@@ -28,6 +35,12 @@ export class SceneController {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(container.clientWidth, container.clientHeight);
     this.container.appendChild(this.renderer.domElement);
+
+    // Orbit controls
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.1;
+    this.controls.target.set(0, 0, 0);
   }
 
   start() {
@@ -41,9 +54,9 @@ export class SceneController {
       this.animationId = null;
     }
     this.renderer.dispose();
+    this.controls.dispose();
   }
 
-  /** entity API */
   addEntity(e: Entity) {
     this.entities.push(e);
     this.scene.add(e.object3D);
@@ -74,15 +87,20 @@ export class SceneController {
     return this.camera;
   }
 
+  // expose the canvas for input handlers
+  getDomElement(): HTMLCanvasElement {
+    return this.renderer.domElement;
+  }
+
   private animate = (time: number) => {
     const dt = (time - this.lastTime) / 1000;
     this.lastTime = time;
 
-    // update all entities
     for (const e of this.entities) {
       e.update?.(dt);
     }
 
+    this.controls.update();
     this.renderer.render(this.scene, this.camera);
     this.animationId = requestAnimationFrame(this.animate);
   };
