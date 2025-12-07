@@ -9,8 +9,8 @@ export interface BoneChainType {
 }
 
 export class BoneChain implements BoneChainType {
-    public readonly bones: THREE.Bone[] = [];
     public readonly root: THREE.Bone;
+    public readonly bones: THREE.Bone[] = [];
     public readonly handles: THREE.Mesh[] = [];
 
     constructor(count: number, private spacing: number) {
