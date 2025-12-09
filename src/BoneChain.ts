@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import { BoneChainType } from './BoneChainClass';
+// import { BoneChainType } from './BoneChainClass';
 
-export function createBoneChain(count: number, spacing: number): BoneChainType {
+export function createBoneChain(count: number, spacing: number) {
     const bones: THREE.Bone[] = [];
 
     for (let i = 0; i < count; i++) {

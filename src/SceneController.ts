@@ -56,6 +56,14 @@ export class SceneController {
     );
     this.scene.add(this.transformMgr.getHelper());
 
+    this.transformMgr.controls.addEventListener("objectChange", () => {
+      const bone = this.transformMgr.controls.object as THREE.Bone;
+      if (!bone || !(bone as any).isBone) return;
+
+      this.updateSegmentsAroundBone(bone);
+    });
+
+
     // selection manager
     this.selectionManager = new SelectionManager(
       this.camera,
@@ -66,6 +74,18 @@ export class SceneController {
 
     requestAnimationFrame(this.animate);
   }
+
+  private updateSegmentsAroundBone(bone: THREE.Bone) {
+    // 1) parent segment (if parent is a bone)
+    const parent = bone.parent as THREE.Bone;
+    if (parent && (parent as any).isBone) {
+      this.chain.updateSegmentForParent(parent);
+    }
+
+    // 2) segment starting at this bone
+    // this.chain.updateSegmentForParent(bone);
+  }
+
 
   private onObjectSelected = (obj: THREE.Object3D | null) => {
     if (!obj) return;
